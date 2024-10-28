@@ -1,53 +1,59 @@
 import Component from './core/Components.js';
-// import MainPage from './page/mainPage.jsx';
+import MainPage from './page/mainPage.jsx';
+import LoginPage from './page/loginPage.jsx';
+import ProfilePage from './page/profilePage.jsx';
+import ErrorPage from './page/ErrorPage.jsx';
+
 class App extends Component {
+  setup(){
+    window.addEventListener('popstate', this.mounted);
+    document.addEventListener('click', (e)=>{
+      if(e.target.tagName === 'A'){
+        e.preventDefault();
+        window.history.pushState({}, '', e.target.href);
+        this.mounted();
+      }
+    });
+  }
   
   template() {
-    return `
-    <div id="root">dd</div>    
-    `;
+    return `<div id="main"></div>`;
   }
 
-  setEvent() {
-
+  mounted() {
+    const path = window.location.pathname;
+    console.log('mounted',path);
+    switch(path){
+      case '/':
+      case '/main':
+        new MainPage(this.$target);
+        break;
+      case '/login':
+        new LoginPage(this.$target);
+        break;
+      case '/logout':
+        localStorage.removeItem('user');
+        window.history.replaceState({}, '', '/main');
+        this.mounted();
+        break;
+      case '/profile':
+        const user = localStorage.getItem('user');
+        if(!user){
+          window.history.replaceState({}, '', '/login');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+          break;
+        }
+        new ProfilePage(this.$target);
+        break;
+      default:
+        new ErrorPage(this.$target);
+    };
   }
 }
 
-function createElement(node){
-  if(typeof node === 'string'){
-    return document.createTextNode(node);
-  }
-  const $el = document.createElement(node.type);
-  node.children.forEach(child => {
-    $el.appendChild(createElement(child));
-  });
-  return $el;
-}
 
-document.querySelector('#root').appendChild(createElement(<div id="app"><App/></div>));
+new App();
 
-// import dom,{notexist} from './dom.js';
-
-// const selectPage = ()=>{
-//   const path = window.location.pathname;  
-//   switch(path){
-//     case '/':
-//     case '/main.html':      
-//       return dom.main;
-//     case '/login':
-//       return dom.login;
-//     case '/profile.html':
-//     case '/profile':
-//       const user = localStorage.getItem('user');
-//       if(!user){
-//         return dom.profile;
-//       } 
-//       window.history.pushState({}, '', '/login');
-//       return dom.login;
-//     default:
-//       return notexist;
-//   }
-// }
 
 // // 문자열을 Virtual DOM 노드로 변환하는 함수
 // function parseToVNode(htmlString) {
