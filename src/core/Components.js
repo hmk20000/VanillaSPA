@@ -1,11 +1,12 @@
 export default class Component {
   $target;
   state;
-  constructor ($target) { 
+  constructor ($target, props) { 
     if(!$target){
       this.$target = document.querySelector('#root');
     }else{
       this.$target = $target;
+      this.props = props;
     }
     this.setup();
     this.setEvent();

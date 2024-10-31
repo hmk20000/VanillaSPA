@@ -3,10 +3,16 @@ import MainPage from './page/mainPage.jsx';
 import LoginPage from './page/loginPage.jsx';
 import ProfilePage from './page/profilePage.jsx';
 import ErrorPage from './page/ErrorPage.jsx';
+import ErrorBoundary from './page/ErrorBoundary.jsx';
 
 class App extends Component {
   setup(){
+    localStorage.clear();
     window.addEventListener('popstate', this.mounted);
+    window.addEventListener('error', (e)=>{
+      this.$target.innerHTML = '';
+      new ErrorBoundary(this.$target, {error: e.error});
+    });
     document.addEventListener('click', (e)=>{
       if(e.target.tagName === 'A'){
         e.preventDefault();
@@ -22,22 +28,26 @@ class App extends Component {
 
   mounted() {
     const path = window.location.pathname;
-    console.log('mounted',path);
+    const user = localStorage.getItem('user');
     switch(path){
       case '/':
       case '/main':
         new MainPage(this.$target);
         break;
       case '/login':
-        new LoginPage(this.$target);
+        if(!user){
+          new LoginPage(this.$target);
+          break;
+        }
+        window.history.replaceState({}, '', '/main');
+        window.dispatchEvent(new PopStateEvent('popstate'));
         break;
       case '/logout':
         localStorage.removeItem('user');
         window.history.replaceState({}, '', '/main');
-        this.mounted();
+        window.dispatchEvent(new PopStateEvent('popstate'));
         break;
       case '/profile':
-        const user = localStorage.getItem('user');
         if(!user){
           window.history.replaceState({}, '', '/login');
           window.dispatchEvent(new PopStateEvent('popstate'));

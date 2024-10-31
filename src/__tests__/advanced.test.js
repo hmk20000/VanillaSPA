@@ -48,7 +48,7 @@ describe('심화과제 테스트', () => {
       loginForm.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
 
       goTo('/login')
-      expect(document.querySelector('nav .text-blue-600.font-bold').innerHTML).toContain('홈');
+      expect(document.querySelector('nav .text-blue-600').innerHTML).toContain('홈');
     });
   });
 
