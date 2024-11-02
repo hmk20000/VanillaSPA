@@ -1,111 +1,136 @@
-document.querySelector('#root').innerHTML = `
-<div class="bg-gray-100 min-h-screen flex justify-center">
-    <div class="max-w-md w-full">
-      <header class="bg-blue-600 text-white p-4 sticky top-0">
-        <h1 class="text-2xl font-bold">항해플러스</h1>
-      </header>
+import Component from './core/Components.js';
+import MainPage from './page/mainPage.jsx';
+import LoginPage from './page/loginPage.jsx';
+import ProfilePage from './page/profilePage.jsx';
+import ErrorPage from './page/ErrorPage.jsx';
+import ErrorBoundary from './page/ErrorBoundary.jsx';
 
-      <nav class="bg-white shadow-md p-2 sticky top-14">
-        <ul class="flex justify-around">
-          <li><a href="./main.html" class="text-blue-600">홈</a></li>
-          <li><a href="./profile.html" class="text-gray-600">프로필</a></li>
-          <li><a href="#" class="text-gray-600">로그아웃</a></li>
-        </ul>
-      </nav>
+class App extends Component {
+  setup(){
+    localStorage.clear();
+    window.addEventListener('popstate', this.mounted);
+    window.addEventListener('error', (e)=>{
+      this.$target.innerHTML = '';
+      new ErrorBoundary(this.$target, {error: e.error});
+    });
+    document.addEventListener('click', (e)=>{
+      if(e.target.tagName === 'A'){
+        e.preventDefault();
+        window.history.pushState({}, '', e.target.href);
+        this.mounted();
+      }
+    });
+  }
+  
+  template() {
+    return `<div id="main"></div>`;
+  }
 
-      <main class="p-4">
-        <div class="mb-4 bg-white rounded-lg shadow p-4">
-          <textarea class="w-full p-2 border rounded" placeholder="무슨 생각을 하고 계신가요?"></textarea>
-          <button class="mt-2 bg-blue-600 text-white px-4 py-2 rounded">게시</button>
-        </div>
+  mounted() {
+    const path = window.location.pathname;
+    const user = localStorage.getItem('user');
+    switch(path){
+      case '/':
+      case '/main':
+        new MainPage(this.$target);
+        break;
+      case '/login':
+        if(!user){
+          new LoginPage(this.$target);
+          break;
+        }
+        window.history.replaceState({}, '', '/main');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        break;
+      case '/logout':
+        localStorage.removeItem('user');
+        window.history.replaceState({}, '', '/main');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        break;
+      case '/profile':
+        if(!user){
+          window.history.replaceState({}, '', '/login');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+          break;
+        }
+        new ProfilePage(this.$target);
+        break;
+      default:
+        new ErrorPage(this.$target);
+    };
+  }
+}
 
-        <div class="space-y-4">
 
-          <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center mb-2">
-              <img src="https://via.placeholder.com/40" alt="프로필" class="rounded-full mr-2">
-              <div>
-                <p class="font-bold">홍길동</p>
-                <p class="text-sm text-gray-500">5분 전</p>
-              </div>
-            </div>
-            <p>오늘 날씨가 정말 좋네요. 다들 좋은 하루 보내세요!</p>
-            <div class="mt-2 flex justify-between text-gray-500">
-              <button>좋아요</button>
-              <button>댓글</button>
-              <button>공유</button>
-            </div>
-          </div>
+new App();
 
-          <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center mb-2">
-              <img src="https://via.placeholder.com/40" alt="프로필" class="rounded-full mr-2">
-              <div>
-                <p class="font-bold">김철수</p>
-                <p class="text-sm text-gray-500">15분 전</p>
-              </div>
-            </div>
-            <p>새로운 프로젝트를 시작했어요. 열심히 코딩 중입니다!</p>
-            <div class="mt-2 flex justify-between text-gray-500">
-              <button>좋아요</button>
-              <button>댓글</button>
-              <button>공유</button>
-            </div>
-          </div>
 
-          <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center mb-2">
-              <img src="https://via.placeholder.com/40" alt="프로필" class="rounded-full mr-2">
-              <div>
-                <p class="font-bold">이영희</p>
-                <p class="text-sm text-gray-500">30분 전</p>
-              </div>
-            </div>
-            <p>오늘 점심 메뉴 추천 받습니다. 뭐가 좋을까요?</p>
-            <div class="mt-2 flex justify-between text-gray-500">
-              <button>좋아요</button>
-              <button>댓글</button>
-              <button>공유</button>
-            </div>
-          </div>
+// // 문자열을 Virtual DOM 노드로 변환하는 함수
+// function parseToVNode(htmlString) {
+//   const parser = new DOMParser();
+//   const doc = parser.parseFromString(htmlString, "text/html");
+//   return convertElementToVNode(doc.body);
+// }
 
-          <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center mb-2">
-              <img src="https://via.placeholder.com/40" alt="프로필" class="rounded-full mr-2">
-              <div>
-                <p class="font-bold">박민수</p>
-                <p class="text-sm text-gray-500">1시간 전</p>
-              </div>
-            </div>
-            <p>주말에 등산 가실 분 계신가요? 함께 가요!</p>
-            <div class="mt-2 flex justify-between text-gray-500">
-              <button>좋아요</button>
-              <button>댓글</button>
-              <button>공유</button>
-            </div>
-          </div>
+// // DOM Element를 재귀적으로 Virtual DOM으로 변환하는 함수
+// function convertElementToVNode(element) {
+//   if (element.nodeType === Node.TEXT_NODE) {
+//     return element.textContent.trim() ? element.textContent : null;
+//   }
 
-          <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center mb-2">
-              <img src="https://via.placeholder.com/40" alt="프로필" class="rounded-full mr-2">
-              <div>
-                <p class="font-bold">정수연</p>
-                <p class="text-sm text-gray-500">2시간 전</p>
-              </div>
-            </div>
-            <p>새로 나온 영화 재미있대요. 같이 보러 갈 사람?</p>
-            <div class="mt-2 flex justify-between text-gray-500">
-              <button>좋아요</button>
-              <button>댓글</button>
-              <button>공유</button>
-            </div>
-          </div>
-        </div>
-      </main>
+//   const vnode = {
+//     type: element.tagName.toLowerCase(),
+//     props: {},
+//     children: []
+//   };
 
-      <footer class="bg-gray-200 p-4 text-center">
-        <p>&copy; 2024 항해플러스. All rights reserved.</p>
-      </footer>
-    </div>
-  </div>
-`;
+//   // 속성 추가
+//   Array.from(element.attributes).forEach(attr => {
+//     vnode.props[attr.name] = attr.value;
+//   });
+
+//   // 자식 요소 처리
+//   Array.from(element.childNodes).forEach(child => {
+//     const childVNode = convertElementToVNode(child);
+//     if (childVNode) vnode.children.push(childVNode);
+//   });
+
+//   return vnode;
+// }
+
+// // Virtual DOM을 실제 DOM으로 렌더링하는 함수
+// function render(vnode) {
+//   if (typeof vnode === "string") {
+//     return document.createTextNode(vnode);
+//   }
+
+//   const element = document.createElement(vnode.type);
+//   for (const [key, value] of Object.entries(vnode.props)) {
+//     element.setAttribute(key, value);
+//   }
+
+//   vnode.children.forEach(childVNode => {
+//     element.appendChild(render(childVNode));
+//   });
+
+//   return element;
+// }
+
+// document.addEventListener('click', (e)=>{
+//   e.preventDefault();
+//   window.history.pushState({}, '', e.target.href);
+//   renderPage();
+// });
+
+// const renderPage = ()=>{
+//   const vnode = parseToVNode(selectPage());
+//   const root = document.querySelector('#root');
+//   root.innerHTML = '';
+//   root.appendChild(render(vnode));
+// }
+
+
+
+// window.addEventListener('popstate', renderPage);
+// // window.addEventListener('DOMContentLoaded', renderPage);
+// window.addEventListener('load', renderPage);
